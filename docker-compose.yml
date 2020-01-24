@@ -1,0 +1,13 @@
+version: "3.7"
+services:
+  go:
+    build:
+      context: ./
+      dockerfile: ./build/docker/go/Dockerfile
+    environment:
+      OWNER_NAME: ${OWNER_NAME}
+      PROJECT_NAME: ${PROJECT_NAME}
+    volumes:
+    - .:/go/src/${OWNER_NAME}/${PROJECT_NAME}
+    working_dir: /go/src/${OWNER_NAME}/${PROJECT_NAME}
+    command: make build

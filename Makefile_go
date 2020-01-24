@@ -1,0 +1,17 @@
+MAKE_GO := $(MAKE) -f Makefile_go
+
+all:
+	$(MAKE_GO) build
+
+lint:
+	sh scripts/go-lint.sh
+
+clean: 
+	rm -rf build/deploy/cmd/*
+
+.PHONY: build
+build: lint clean
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -v -installsuffix cgo -o ./build/deploy/cmd/${PROJECT_NAME} ./cmd/${PROJECT_NAME}/
+
+test:
+	go test -v $(TEST_TARGET)
