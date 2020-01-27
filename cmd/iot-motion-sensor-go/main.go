@@ -90,7 +90,7 @@ func mqttClient() (MQTT.Client, error) {
 func newRobot(c MQTT.Client) *gobot.Robot {
 	firmataAdaptor := firmata.NewAdaptor("/dev/ttyACM0")
 
-	sensor := gpio.NewPIRMotionDriver(firmataAdaptor, "5")
+	sensor := gpio.NewPIRMotionDriver(firmataAdaptor, "18")
 
 	work := func() {
 		sensor.On(gpio.MotionDetected, func(data interface{}) {
