@@ -21,7 +21,7 @@ down:
 	docker-compose down
 
 .PHONY: build
-build lint clean:
+build lint clean exec:
 	$(DOCKER_COMPOSE_RUN) $(DOCKER_SERVICE_GO) make -f Makefile_go $@
 
 test:

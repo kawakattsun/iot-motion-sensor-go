@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"gobot.io/x/gobot"
@@ -31,7 +32,7 @@ var (
 )
 
 func parseArgs() {
-	flag.StringVar(&hostName, "hostName", "", "host name flag")
+	flag.StringVar(&hostName, "host-name", "", "host name flag")
 	flag.StringVar(&clientID, "client-id", "", "client-id flag")
 	flag.StringVar(&clientCertificate, "client-certificate", "", "client-certificate flag")
 	flag.StringVar(&caCertificate, "ca-certificate", "", "ca-certificate flag")
@@ -43,18 +44,20 @@ func parseArgs() {
 
 func newTLSConfig() (*tls.Config, error) {
 	certpool := x509.NewCertPool()
-	pemCerts, err := ioutil.ReadFile(clientCertificate)
+	pemCerts, err := ioutil.ReadFile(caCertificate)
 	if err == nil {
 		certpool.AppendCertsFromPEM(pemCerts)
 	}
 
-	cert, err := tls.LoadX509KeyPair(caCertificate, privateKey)
+	cert, err := tls.LoadX509KeyPair(clientCertificate, privateKey)
 	if err != nil {
+		log.Printf("error: cert file mismatch. clientCertificate: %s, privateKey: %s\n", clientCertificate, privateKey)
 		return nil, err
 	}
 
 	cert.Leaf, err = x509.ParseCertificate(cert.Certificate[0])
 	if err != nil {
+		log.Print("error: parse certificate.\n")
 		return nil, err
 	}
 
@@ -75,6 +78,7 @@ var f MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
 func mqttClient() (MQTT.Client, error) {
 	tlsconfig, err := newTLSConfig()
 	if err != nil {
+		log.Print("error: newTLSConfig error.\n")
 		return nil, err
 	}
 
@@ -129,6 +133,7 @@ func main() {
 	defer c.Disconnect(250)
 
 	if token := c.Connect(); token.Wait() && token.Error() != nil {
+		log.Printf("error: AWS IoT not connected.: %+v\n", c)
 		panic(token.Error())
 	}
 	fmt.Print("AWS IoT Connect Success\n")
