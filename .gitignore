@@ -5,5 +5,7 @@ vendor
 main
 
 build/deploy/cmd/*
+*.key
+*.crt
 
 !.gitkeep
