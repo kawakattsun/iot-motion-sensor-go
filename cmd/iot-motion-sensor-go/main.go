@@ -11,7 +11,7 @@ import (
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/drivers/gpio"
-	"gobot.io/x/gobot/platforms/firmata"
+	"gobot.io/x/gobot/platforms/raspi"
 )
 
 const (
@@ -19,6 +19,7 @@ const (
 	shadowUpdateEndpointBase = "$aws/things/%s/shadow/update"
 	sensorOnMessage          = `{"state":{"reported":{"sensor":"on"}}}`
 	sensorOffMessage         = `{"state":{"reported":{"sensor":"off"}}}`
+	pirMotionDriverPin       = "12"
 )
 
 var (
@@ -92,9 +93,8 @@ func mqttClient() (MQTT.Client, error) {
 }
 
 func newRobot(c MQTT.Client) *gobot.Robot {
-	firmataAdaptor := firmata.NewAdaptor("/dev/ttyACM0")
-
-	sensor := gpio.NewPIRMotionDriver(firmataAdaptor, "18")
+	r := raspi.NewAdaptor()
+	sensor := gpio.NewPIRMotionDriver(r, pirMotionDriverPin)
 
 	work := func() {
 		sensor.On(gpio.MotionDetected, func(data interface{}) {
@@ -118,7 +118,7 @@ func newRobot(c MQTT.Client) *gobot.Robot {
 	}
 
 	return gobot.NewRobot("motionBot",
-		[]gobot.Connection{firmataAdaptor},
+		[]gobot.Connection{r},
 		[]gobot.Device{sensor},
 		work,
 	)
