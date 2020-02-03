@@ -15,21 +15,20 @@ import (
 )
 
 const (
-	awsIotHostName           = "ssl://%s:8883"
-	shadowUpdateEndpointBase = "$aws/things/%s/shadow/update"
-	sensorOnMessage          = `{"state":{"reported":{"sensor":"on"}}}`
-	sensorOffMessage         = `{"state":{"reported":{"sensor":"off"}}}`
-	pirMotionDriverPin       = "12"
+	awsIotHostName     = "ssl://%s:8883"
+	endpointBase       = "%s/meeting-room"
+	sensorOnMessage    = `{"state":{"reported":{"sensor":"on"}}}`
+	sensorOffMessage   = `{"state":{"reported":{"sensor":"off"}}}`
+	pirMotionDriverPin = "12"
 )
 
 var (
-	hostName             string
-	clientID             string
-	clientCertificate    string
-	caCertificate        string
-	privateKey           string
-	thingName            string
-	shadowUpdateEndpoint string
+	hostName          string
+	clientID          string
+	clientCertificate string
+	caCertificate     string
+	privateKey        string
+	endpoint          string
 )
 
 func parseArgs() {
@@ -38,9 +37,8 @@ func parseArgs() {
 	flag.StringVar(&clientCertificate, "client-certificate", "", "client-certificate flag")
 	flag.StringVar(&caCertificate, "ca-certificate", "", "ca-certificate flag")
 	flag.StringVar(&privateKey, "private-key", "", "private-key flag")
-	flag.StringVar(&thingName, "thing-name", "", "thing-name flag")
+	flag.StringVar(&endpoint, "endpoint", "", "endpoint flag")
 	flag.Parse()
-	shadowUpdateEndpoint = fmt.Sprintf(shadowUpdateEndpointBase, thingName)
 }
 
 func newTLSConfig() (*tls.Config, error) {
@@ -99,7 +97,7 @@ func newRobot(c MQTT.Client) *gobot.Robot {
 	work := func() {
 		sensor.On(gpio.MotionDetected, func(data interface{}) {
 			fmt.Println(gpio.MotionDetected)
-			token := c.Publish(fmt.Sprintf(shadowUpdateEndpoint), 0, false, sensorOnMessage)
+			token := c.Publish(endpoint, 0, false, sensorOnMessage)
 			if token.Wait() && token.Error() != nil {
 				fmt.Printf("error: %+v", token.Error())
 			} else {
@@ -108,7 +106,7 @@ func newRobot(c MQTT.Client) *gobot.Robot {
 		})
 		sensor.On(gpio.MotionStopped, func(data interface{}) {
 			fmt.Println(gpio.MotionStopped)
-			token := c.Publish(shadowUpdateEndpoint, 0, false, sensorOffMessage)
+			token := c.Publish(endpoint, 0, false, sensorOffMessage)
 			if token.Wait() && token.Error() != nil {
 				fmt.Printf("error: %+v", token.Error())
 			} else {

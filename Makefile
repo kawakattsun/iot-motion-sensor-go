@@ -6,7 +6,7 @@ DOCKER_COMPOSE_RUN = docker-compose run --rm
 STAGE ?= dev
 TEST_TARGET ?= ./...
 
-RASPI_IP ?= 192.168.3.16
+RASPI_IP ?= 192.168.100.213
 
 all:
 	$(MAKE) install
