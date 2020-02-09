@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"time"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"gobot.io/x/gobot"
@@ -15,10 +16,10 @@ import (
 )
 
 const (
+	location           = "Asia/Tokyo"
 	awsIotHostName     = "ssl://%s:8883"
 	endpointBase       = "%s/meeting-room"
-	sensorOnMessage    = `{"state":{"reported":{"sensor":"on"}}}`
-	sensorOffMessage   = `{"state":{"reported":{"sensor":"off"}}}`
+	messageTemplate    = `{"sensor":"%s","detected_at":"%s"}`
 	pirMotionDriverPin = "12"
 )
 
@@ -97,7 +98,7 @@ func newRobot(c MQTT.Client) *gobot.Robot {
 	work := func() {
 		sensor.On(gpio.MotionDetected, func(data interface{}) {
 			fmt.Println(gpio.MotionDetected)
-			token := c.Publish(endpoint, 0, false, sensorOnMessage)
+			token := c.Publish(endpoint, 0, false, fmt.Sprintf(messageTemplate, "on", time.Now().Format(time.RFC3339)))
 			if token.Wait() && token.Error() != nil {
 				fmt.Printf("error: %+v", token.Error())
 			} else {
@@ -106,7 +107,7 @@ func newRobot(c MQTT.Client) *gobot.Robot {
 		})
 		sensor.On(gpio.MotionStopped, func(data interface{}) {
 			fmt.Println(gpio.MotionStopped)
-			token := c.Publish(endpoint, 0, false, sensorOffMessage)
+			token := c.Publish(endpoint, 0, false, fmt.Sprintf(messageTemplate, "off", time.Now().Format(time.RFC3339)))
 			if token.Wait() && token.Error() != nil {
 				fmt.Printf("error: %+v", token.Error())
 			} else {
@@ -120,6 +121,14 @@ func newRobot(c MQTT.Client) *gobot.Robot {
 		[]gobot.Device{sensor},
 		work,
 	)
+}
+
+func init() {
+	loc, err := time.LoadLocation(location)
+	if err != nil {
+		loc = time.FixedZone(location, 9*60*60)
+	}
+	time.Local = loc
 }
 
 func main() {
@@ -137,5 +146,22 @@ func main() {
 	fmt.Print("AWS IoT Connect Success\n")
 
 	robot := newRobot(c)
+
+	go func() {
+		ticker := time.NewTicker(time.Second * 10)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				token := c.Publish(endpoint, 0, false, messageTemplate)
+				if token.Wait() && token.Error() != nil {
+					fmt.Printf("error: %+v", token.Error())
+				} else {
+					fmt.Print("Message Publish Success. timeTicker.\n")
+				}
+			}
+		}
+	}()
+
 	robot.Start()
 }
