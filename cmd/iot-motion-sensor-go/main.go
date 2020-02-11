@@ -18,7 +18,6 @@ import (
 const (
 	location           = "Asia/Tokyo"
 	awsIotHostName     = "ssl://%s:8883"
-	endpointBase       = "%s/meeting-room"
 	messageTemplate    = `{"sensor":"%s","detected_at":"%s"}`
 	pirMotionDriverPin = "12"
 )
@@ -106,7 +105,6 @@ func newRobot(c MQTT.Client) *gobot.Robot {
 			}
 		})
 		sensor.On(gpio.MotionStopped, func(data interface{}) {
-			fmt.Println(gpio.MotionStopped)
 			token := c.Publish(endpoint, 0, false, fmt.Sprintf(messageTemplate, "off", time.Now().Format(time.RFC3339)))
 			if token.Wait() && token.Error() != nil {
 				fmt.Printf("error: %+v", token.Error())
@@ -153,7 +151,8 @@ func main() {
 		for {
 			select {
 			case <-ticker.C:
-				token := c.Publish(endpoint, 0, false, messageTemplate)
+				msg := fmt.Sprintf(messageTemplate, "off", time.Now().Format(time.RFC3339))
+				token := c.Publish(endpoint, 0, false, msg)
 				if token.Wait() && token.Error() != nil {
 					fmt.Printf("error: %+v", token.Error())
 				} else {
