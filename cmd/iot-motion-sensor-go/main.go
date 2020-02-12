@@ -105,6 +105,7 @@ func newRobot(c MQTT.Client) *gobot.Robot {
 			}
 		})
 		sensor.On(gpio.MotionStopped, func(data interface{}) {
+			fmt.Println(gpio.MotionStopped)
 			token := c.Publish(endpoint, 0, false, fmt.Sprintf(messageTemplate, "off", time.Now().Format(time.RFC3339)))
 			if token.Wait() && token.Error() != nil {
 				fmt.Printf("error: %+v", token.Error())
