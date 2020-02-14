@@ -138,7 +138,7 @@ func main() {
 	robot := newRobot(c)
 
 	go func() {
-		ticker := time.NewTicker(time.Second * 15)
+		ticker := time.NewTicker(time.Second * 30)
 		defer ticker.Stop()
 		for {
 			select {
