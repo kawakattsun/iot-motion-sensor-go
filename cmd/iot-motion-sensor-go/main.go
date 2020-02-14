@@ -104,15 +104,6 @@ func newRobot(c MQTT.Client) *gobot.Robot {
 				fmt.Print("Message Publish Success\n")
 			}
 		})
-		sensor.On(gpio.MotionStopped, func(data interface{}) {
-			fmt.Println(gpio.MotionStopped)
-			token := c.Publish(endpoint, 0, false, fmt.Sprintf(messageTemplate, "off", time.Now().Format(time.RFC3339)))
-			if token.Wait() && token.Error() != nil {
-				fmt.Printf("error: %+v", token.Error())
-			} else {
-				fmt.Print("Message Publish Success\n")
-			}
-		})
 	}
 
 	return gobot.NewRobot("motionBot",
@@ -147,7 +138,7 @@ func main() {
 	robot := newRobot(c)
 
 	go func() {
-		ticker := time.NewTicker(time.Second * 10)
+		ticker := time.NewTicker(time.Second * 15)
 		defer ticker.Stop()
 		for {
 			select {

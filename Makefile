@@ -6,7 +6,7 @@ DOCKER_COMPOSE_RUN = docker-compose run --rm
 STAGE ?= dev
 TEST_TARGET ?= ./...
 
-RASPI_IP ?= 192.168.100.213
+RASPI_IP ?= raspberrypi.local
 
 all:
 	$(MAKE) install
@@ -33,4 +33,6 @@ test:
 
 .PHONY: deploy
 deploy: build/deploy/cmd/${PROJECT_NAME}
+	ssh pi@$(RASPI_IP) sudo systemctl stop iot-motion-sensor-go
 	scp $< pi@$(RASPI_IP):~/
+	ssh pi@$(RASPI_IP) sudo systemctl start iot-motion-sensor-go
